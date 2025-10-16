@@ -21,7 +21,7 @@ import com.mani.respository.UserRepository;
 
 @RestController
 @RequestMapping("/api/auth")
-@CrossOrigin(origins = "https://manikanta-dev-25.github.io/Harvester_logx-frontend/") // Allow your frontend
+@CrossOrigin(origins = "https://manikanta-dev-25.github.io/Harvester_logx-frontend") // Allow your frontend
 public class AuthController {
 
     @Autowired
