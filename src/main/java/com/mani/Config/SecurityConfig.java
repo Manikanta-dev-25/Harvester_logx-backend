@@ -14,7 +14,7 @@ package com.mani.Config;
 	    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
 	        http.csrf(csrf -> csrf.disable())
 	            .authorizeHttpRequests(auth -> auth
-	                .requestMatchers("/api/auth/**", "/h2-console/**").permitAll()
+	                .requestMatchers("/api/auth/**", "/h2-console/**","/api/logs/**").permitAll()
 	                .anyRequest().authenticated()
 	            )
 	            .headers(headers -> headers.frameOptions(frame -> frame.disable())); // For H2 Console
