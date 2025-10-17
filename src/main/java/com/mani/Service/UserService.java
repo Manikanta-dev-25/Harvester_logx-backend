@@ -21,7 +21,8 @@ public class UserService {
     @Autowired
     private JavaMailSender mailSender;
 
-    private BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
+    @Autowired
+    private BCryptPasswordEncoder passwordEncoder;
 
     public Users RegisterUser(Users User) {
         User.setPassword(passwordEncoder.encode(User.getPassword()));
@@ -29,7 +30,7 @@ public class UserService {
     }
 
     public Boolean ValidateUser(String email, String Password) {
-        Users User = ur.findByEmail(email);
+        Users User = ur.findByEmailIgnoreCase(email.trim());
         if (User == null) {
             return false;
         }
@@ -37,18 +38,18 @@ public class UserService {
     }
 
     public boolean existsByEmail(String email) {
-        return ur.findByEmail(email) != null;
+        return ur.findByEmailIgnoreCase(email.trim()) != null;
     }
 
     public Users ByEmail(String email) {
-        return ur.findByEmail(email);
+        return ur.findByEmailIgnoreCase(email.trim());
     }
 
     
     public void sendResetLink(String email) {
         System.out.println("reset method called in service");
 
-        Users user = ur.findByEmail(email);
+        Users user = ur.findByEmailIgnoreCase(email.trim());
         if (user == null) {
             System.out.println("DEBUG: User not found for email: " + email);
             return;
