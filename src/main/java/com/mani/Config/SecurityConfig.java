@@ -20,7 +20,7 @@ public class SecurityConfig {
             .cors(cors -> cors.configurationSource(corsConfigurationSource()))
             .csrf(csrf -> csrf.disable())
             .authorizeHttpRequests(auth -> auth
-                .anyRequest().permitAll()   // Allow all endpoints
+                .anyRequest().permitAll()
             )
             .headers(headers -> headers.frameOptions(frame -> frame.disable())); // for H2 console
 
@@ -36,15 +36,12 @@ public class SecurityConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
 
-        // FIX FOR DEVICE COMPATIBILITY: Using "*" to allow all origins.
-        // This ensures that regardless of the device, network, or port used by the frontend,
-        // CORS will not block the request. 
-        config.setAllowedOriginPatterns(List.of("*"));
+        // ✅ Allow only your frontend origin
+        config.setAllowedOrigins(List.of("https://manikanta-dev-25.github.io"));
 
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         config.setAllowedHeaders(List.of("*"));
-        // Setting allow credentials to true is still necessary if the browser sends cookies/auth
-        config.setAllowCredentials(true); 
+        config.setAllowCredentials(true);
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", config);
