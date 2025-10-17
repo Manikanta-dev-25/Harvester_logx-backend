@@ -36,9 +36,10 @@ public class SecurityConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
 
-        // ✅ Allow only trusted origins (GitHub Pages + localhost for dev)
+        // FIX: Added the full GitHub Pages repository path as an explicit allowed origin.
         config.setAllowedOriginPatterns(List.of(
-            "https://manikanta-dev-25.github.io",
+            "https://manikanta-dev-25.github.io/Harvester_logx-frontend", // <-- ADDED FULL PATH
+            "https://manikanta-dev-25.github.io", // Retain the root domain
             "http://localhost:3000"
         ));
 
