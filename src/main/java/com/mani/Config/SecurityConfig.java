@@ -36,16 +36,15 @@ public class SecurityConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
 
-        // FIX: Added the full GitHub Pages repository path as an explicit allowed origin.
-        config.setAllowedOriginPatterns(List.of(
-            "https://manikanta-dev-25.github.io/Harvester_logx-frontend", // <-- ADDED FULL PATH
-            "https://manikanta-dev-25.github.io", // Retain the root domain
-            "http://localhost:3000"
-        ));
+        // FIX FOR DEVICE COMPATIBILITY: Using "*" to allow all origins.
+        // This ensures that regardless of the device, network, or port used by the frontend,
+        // CORS will not block the request. 
+        config.setAllowedOriginPatterns(List.of("*"));
 
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         config.setAllowedHeaders(List.of("*"));
-        config.setAllowCredentials(true); // Needed if frontend sends cookies or auth headers
+        // Setting allow credentials to true is still necessary if the browser sends cookies/auth
+        config.setAllowCredentials(true); 
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", config);
