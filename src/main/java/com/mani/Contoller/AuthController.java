@@ -1,4 +1,4 @@
-package com.mani.Contoller; // keep the folder name consistent
+package com.mani.Contoller; // Keep folder name consistent; fix typo if desired to "Controller"
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -30,7 +30,9 @@ import com.mani.respository.UserRepository;
 
 @RestController
 @RequestMapping("/api/auth")
-@CrossOrigin(origins = "*") // Allow all origins
+@CrossOrigin(origins = {"http://localhost:5173",
+                        "https://manikanta-dev-25.github.io",
+                        "https://manikanta-dev-25.github.io/Harvester_logx-frontend"})
 public class AuthController {
 
     @Autowired
@@ -135,12 +137,16 @@ public class AuthController {
     @PutMapping("/logs/batch-update")
     public ResponseEntity<?> updateLogs(@RequestBody List<LogEntry> updatedLogs, @RequestParam String user) {
         List<LogEntry> savedLogs = new ArrayList<>();
+
         for (LogEntry updatedLog : updatedLogs) {
             LogEntry existing = logRepository.findById(updatedLog.getId()).orElse(null);
             if (existing == null || !existing.getCreatedBy().equalsIgnoreCase(user.trim())) continue;
+
             updatedLog.setCreatedBy(existing.getCreatedBy());
-            savedLogs.add(logService.SaveEntries(updatedLog));
+            LogEntry saved = logService.SaveEntries(updatedLog);
+            savedLogs.add(saved);
         }
+
         if (savedLogs.isEmpty()) return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                 .body("No logs were updated.");
         return ResponseEntity.ok(savedLogs);
