@@ -1,4 +1,4 @@
-package com.mani.Contoller;
+package com.mani.Contoller; // Keep folder name consistent; fix typo if desired to "Controller"
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -30,182 +30,169 @@ import com.mani.respository.UserRepository;
 
 @RestController
 @RequestMapping("/api/auth")
-@CrossOrigin(origins = "http://localhost:5173")
+@CrossOrigin(origins = {"http://localhost:5173",
+                        "https://manikanta-dev-25.github.io",
+                        "https://manikanta-dev-25.github.io/Harvester_logx-frontend"})
 public class AuthController {
 
-	@Autowired
-	public UserService us;
+    @Autowired
+    private UserService userService;
 
-	@Autowired
-	public UserRepository ur;
+    @Autowired
+    private UserRepository userRepository;
 
-	@Autowired
-	public LogRepository lr;
-	@Autowired
-	public LogService ls;
-	@PostMapping("/login")
-	public ResponseEntity<?> login(@RequestBody Users user) {
-	    Users existingUser = us.ByEmail(user.getEmail());
+    @Autowired
+    private LogRepository logRepository;
 
-	    if (existingUser != null) {
-	        if (us.ValidateUser(user.getEmail(), user.getPassword())) {
-	            Map<String, String> response = new HashMap<>();
-	            response.put("name", existingUser.getName()); // ✅ Send real name
-	            response.put("message", "Login successful");
-	            return ResponseEntity.ok(response);
-	        } else {
-	            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-	                .body(Map.of("error", "Password doesn't match"));
-	        }
-	    } else {
-	        return ResponseEntity.status(HttpStatus.NOT_FOUND)
-	            .body(Map.of("error", "User not found"));
-	    }
-	}
+    @Autowired
+    private LogService logService;
 
-	@PostMapping("/signup")
-	public ResponseEntity<Map<String, String>> Signup(@RequestBody Users LoginDetails) {
-		System.out.println("Signup method called===========");
-		us.RegisterUser(LoginDetails);
+    @Autowired
+    private BCryptPasswordEncoder passwordEncoder;
 
-		Map<String, String> response = new HashMap<>();
-		response.put("name", LoginDetails.getName());
-		response.put("message", "Signup successful ✅");
+    // ------------------ AUTH ------------------
 
-		return ResponseEntity.ok(response);
-	}
+    @PostMapping("/login")
+    public ResponseEntity<?> login(@RequestBody Users user) {
+        Users existingUser = userService.ByEmail(user.getEmail());
+        if (existingUser == null) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(Map.of("error", "User not found"));
+        }
 
-	@PostMapping("/forgot-password")
-	public ResponseEntity<String> forgotPassword(@RequestBody Users user) {
-	    System.out.println("Forgot password API called for email: " + user.getEmail());
+        boolean valid = userService.ValidateUser(user.getEmail(), user.getPassword());
+        if (!valid) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(Map.of("error", "Password doesn't match"));
+        }
 
-	    boolean exists = us.existsByEmail(user.getEmail());
-	    if (!exists) {
-	        return ResponseEntity.status(404).body("Email not found");
-	    }
+        Map<String, String> response = new HashMap<>();
+        response.put("name", existingUser.getName());
+        response.put("message", "Login successful ✅");
+        return ResponseEntity.ok(response);
+    }
 
-	    us.sendResetLink(user.getEmail());
-	    return ResponseEntity.ok("Password reset link sent (simulated)");
-	}
+    @PostMapping("/signup")
+    public ResponseEntity<Map<String, String>> signup(@RequestBody Users user) {
+        userService.RegisterUser(user);
+        Map<String, String> response = new HashMap<>();
+        response.put("name", user.getName());
+        response.put("message", "Signup successful ✅");
+        return ResponseEntity.ok(response);
+    }
 
-	@PostMapping("/reset-password")
-	public ResponseEntity<String> resetPassword(@RequestBody Map<String, String> body) {
-		String token = body.get("token");
-		String newPassword = body.get("newPassword");
+    // ------------------ PASSWORD RESET ------------------
 
-		Users user = ur.findByResetToken(token);
-		if (user == null) {
-			return ResponseEntity.status(404).body("Invalid token");
-		}
+    @PostMapping("/forgot-password")
+    public ResponseEntity<String> forgotPassword(@RequestBody Users user) {
+        boolean exists = userService.existsByEmail(user.getEmail());
+        if (!exists) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Email not found");
+        }
 
-		if (user.getTokenExpiry().isBefore(LocalDateTime.now())) {
-			return ResponseEntity.status(400).body("Token has expired");
-		}
+        userService.sendResetLink(user.getEmail());
+        return ResponseEntity.ok("Password reset link sent ✅");
+    }
 
-		user.setPassword(new BCryptPasswordEncoder().encode(newPassword));
-		user.setResetToken(null);
-		user.setTokenExpiry(null);
-		ur.save(user);
+    @PostMapping("/reset-password")
+    public ResponseEntity<String> resetPassword(@RequestBody Map<String, String> body) {
+        String token = body.get("token");
+        String newPassword = body.get("newPassword");
 
-		return ResponseEntity.ok("Password has been reset successfully!");
-	}
+        Users user = userRepository.findByResetToken(token);
+        if (user == null) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Invalid token");
+        }
 
-	@PostMapping("/logs/save")
-	public ResponseEntity<LogEntry> saveLog(@RequestBody LogEntry lr) {
-		if (lr.getCreatedBy() == null || lr.getName() == null || lr.getPhno() == null || lr.getVillage() == null) {
-			return ResponseEntity.badRequest().body(null);
-		}
+        if (user.getTokenExpiry() == null || user.getTokenExpiry().isBefore(LocalDateTime.now())) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Token has expired");
+        }
 
-		System.out.println("Saving log for farmer: " + lr.getName());
-		System.out.println("Created by user: " + lr.getCreatedBy());
+        user.setPassword(passwordEncoder.encode(newPassword));
+        user.setResetToken(null);
+        user.setTokenExpiry(null);
+        userRepository.save(user);
 
-		LogEntry savedLog = ls.SaveEntries(lr);
-		return ResponseEntity.ok(savedLog);
-	}
+        return ResponseEntity.ok("Password has been reset successfully ✅");
+    }
 
-	@GetMapping("/logs/user/{createdBy}")
-	public ResponseEntity<List<LogEntry>> getLogsByCreatedBy(@PathVariable String createdBy) {
-		List<LogEntry> logs = lr.findByCreatedByIgnoreCase(createdBy.trim());
-		return ResponseEntity.ok(logs);
-	}
+    // ------------------ LOGS ------------------
 
-	@PutMapping("/logs/batch-update")
-	public ResponseEntity<?> updateLogs(@RequestBody List<LogEntry> updatedLogs, @RequestParam String user) {
-	    List<LogEntry> savedLogs = new ArrayList<>();
+    @PostMapping("/logs/save")
+    public ResponseEntity<LogEntry> saveLog(@RequestBody LogEntry log) {
+        if (log.getCreatedBy() == null || log.getName() == null || log.getPhno() == null || log.getVillage() == null) {
+            return ResponseEntity.badRequest().body(null);
+        }
 
-	    for (LogEntry updatedLog : updatedLogs) {
-	        LogEntry existing = lr.findById(updatedLog.getId()).orElse(null);
-	        if (existing == null) {
-	            continue; // Skip if not found
-	        }
+        LogEntry saved = logService.SaveEntries(log);
+        return ResponseEntity.ok(saved);
+    }
 
-	        if (!existing.getCreatedBy().equalsIgnoreCase(user.trim())) {
-	            continue; // Skip unauthorized updates
-	        }
+    @GetMapping("/logs/user/{createdBy}")
+    public ResponseEntity<List<LogEntry>> getLogsByCreatedBy(@PathVariable String createdBy) {
+        List<LogEntry> logs = logRepository.findByCreatedByIgnoreCase(createdBy.trim());
+        return ResponseEntity.ok(logs);
+    }
 
-	        updatedLog.setCreatedBy(existing.getCreatedBy());
-	        LogEntry saved = ls.SaveEntries(updatedLog);
-	        savedLogs.add(saved);
-	    }
+    @PutMapping("/logs/batch-update")
+    public ResponseEntity<?> updateLogs(@RequestBody List<LogEntry> updatedLogs, @RequestParam String user) {
+        List<LogEntry> savedLogs = new ArrayList<>();
 
-	    if (savedLogs.isEmpty()) {
-	        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("No logs were updated.");
-	    }
+        for (LogEntry updatedLog : updatedLogs) {
+            LogEntry existing = logRepository.findById(updatedLog.getId()).orElse(null);
+            if (existing == null || !existing.getCreatedBy().equalsIgnoreCase(user.trim())) continue;
 
-	    return ResponseEntity.ok(savedLogs);
-	}
-	@DeleteMapping("/logs/delete/{id}")
-	public ResponseEntity<String> deleteLog(@PathVariable Long id) {
-		lr.deleteById(id);
-		return ResponseEntity.ok("Log deleted");
-	}
-	
+            updatedLog.setCreatedBy(existing.getCreatedBy());
+            LogEntry saved = logService.SaveEntries(updatedLog);
+            savedLogs.add(saved);
+        }
 
-	@DeleteMapping("/logs/batch-delete")
-	public ResponseEntity<String> deleteSelectedLogs(@RequestBody Map<String, List<Long>> body, @RequestParam String user) {
-	    // The list of IDs is extracted from the JSON body: { "ids": [1, 2, 3] }
-	    List<Long> idsToDelete = body.get("ids");
-	    
-	    if (idsToDelete == null || idsToDelete.isEmpty()) {
-	        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("No log IDs provided for deletion.");
-	    }
+        if (savedLogs.isEmpty()) return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body("No logs were updated.");
+        return ResponseEntity.ok(savedLogs);
+    }
 
-	    try {
-	        // Use a for loop to iterate through the IDs (as requested by the user)
-	        // while also performing authorization checks.
-	        
-	        List<Long> authorizedIds = new ArrayList<>();
-	        
-	        // Find all logs by the IDs provided
-	        List<LogEntry> logs = lr.findAllById(idsToDelete);
-	        
-	        for (LogEntry log : logs) {
-	            // Check if the log is authorized to be deleted by the current user
-	            if (log.getCreatedBy().equalsIgnoreCase(user.trim())) {
-	                authorizedIds.add(log.getId());
-	            }
-	        }
-	        
-	        if (authorizedIds.isEmpty()) {
-	            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Unauthorized: Cannot delete logs you did not create.");
-	        }
+    @DeleteMapping("/logs/delete/{id}")
+    public ResponseEntity<String> deleteLog(@PathVariable Long id, @RequestParam String user) {
+        LogEntry log = logRepository.findById(id).orElse(null);
+        if (log == null || !log.getCreatedBy().equalsIgnoreCase(user.trim())) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Unauthorized to delete this log");
+        }
+        logRepository.deleteById(id);
+        return ResponseEntity.ok("Log deleted ✅");
+    }
 
-	        // Perform the batch delete using the repository's method
-	        lr.deleteAllById(authorizedIds);
+    @DeleteMapping("/logs/batch-delete")
+    public ResponseEntity<String> deleteSelectedLogs(@RequestBody Map<String, List<Long>> body,
+                                                     @RequestParam String user) {
+        List<Long> idsToDelete = body.get("ids");
+        if (idsToDelete == null || idsToDelete.isEmpty())
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("No log IDs provided");
 
-	        return ResponseEntity.ok(authorizedIds.size() + " log(s) deleted successfully.");
-	        
-	    } catch (Exception e) {
-	        e.printStackTrace(); 
-	        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-	                .body("Failed to execute batch delete: " + e.getMessage());
-	    }
-	}
+        List<LogEntry> logs = logRepository.findAllById(idsToDelete);
+        List<Long> authorizedIds = new ArrayList<>();
+        for (LogEntry log : logs) {
+            if (log.getCreatedBy().equalsIgnoreCase(user.trim())) {
+                authorizedIds.add(log.getId());
+            }
+        }
 
-	@GetMapping("/api/logs/filter")
-	public ResponseEntity<List<LogEntry>> filterLogs(@RequestParam(required = false) String name,
-			@RequestParam(required = false) String village, @RequestParam(required = false) Double hourlyWage) {
-		List<LogEntry> results = ls.filterLogs(name, village, hourlyWage);
-		return ResponseEntity.ok(results);
-	}
+        if (authorizedIds.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .body("Unauthorized: Cannot delete logs you did not create");
+        }
+
+        logRepository.deleteAllById(authorizedIds);
+        return ResponseEntity.ok(authorizedIds.size() + " log(s) deleted ✅");
+    }
+
+    @GetMapping("/logs/filter")
+    public ResponseEntity<List<LogEntry>> filterLogs(
+            @RequestParam(required = false) String name,
+            @RequestParam(required = false) String village,
+            @RequestParam(required = false) Double hourlyWage) {
+
+        List<LogEntry> results = logService.filterLogs(name, village, hourlyWage);
+        return ResponseEntity.ok(results);
+    }
 }
