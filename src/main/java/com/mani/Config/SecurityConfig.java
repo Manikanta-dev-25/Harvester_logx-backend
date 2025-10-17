@@ -20,10 +20,9 @@ public class SecurityConfig {
             .cors(cors -> cors.configurationSource(corsConfigurationSource()))
             .csrf(csrf -> csrf.disable())
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/api/auth/**", "/api/**", "/h2-console/**").permitAll()
-                .anyRequest().authenticated()
+                .anyRequest().permitAll()   // Allow all endpoints (no default login) 
             )
-            .headers(headers -> headers.frameOptions(frame -> frame.disable())); // For H2 Console
+            .headers(headers -> headers.frameOptions(frame -> frame.disable()));
 
         return http.build();
     }
@@ -36,7 +35,10 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
-        config.setAllowedOrigins(List.of("https://manikanta-dev-25.github.io"));
+        config.setAllowedOrigins(List.of(
+            "https://manikanta-dev-25.github.io",
+            "https://manikanta-dev-25.github.io/Harvester_logx-frontend"
+        ));
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         config.setAllowedHeaders(List.of("*"));
         config.setAllowCredentials(true);
