@@ -37,7 +37,7 @@ public class SecurityConfig {
         CorsConfiguration config = new CorsConfiguration();
 
         // ✅ Allow only your frontend origin
-        config.setAllowedOrigins(List.of("https://manikanta-dev-25.github.io"));
+        config.setAllowedOriginPatterns(List.of("https://manikanta-dev-25.github.io*"));
 
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         config.setAllowedHeaders(List.of("*"));
