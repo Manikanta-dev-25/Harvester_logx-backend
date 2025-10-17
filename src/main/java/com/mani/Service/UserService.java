@@ -46,27 +46,33 @@ public class UserService {
 
     
     public void sendResetLink(String email) {
-       System.out.println("reset method called in service");
+        System.out.println("reset method called in service");
+
         Users user = ur.findByEmail(email);
         if (user == null) {
             System.out.println("DEBUG: User not found for email: " + email);
             return;
         }
 
+        // Generate reset token and expiry
         String token = UUID.randomUUID().toString();
         user.setResetToken(token);
         user.setTokenExpiry(LocalDateTime.now().plusMinutes(30));
         ur.save(user);
 
-        // Use frontend URL (React dev server in dev)
-        String frontendUrl = "http://localhost:5173"; // change to your deployed domain in production
+        // ✅ Use deployed frontend URL instead of localhost
+        String frontendUrl = "https://manikanta-dev-25.github.io/Harvester_logx-frontend";
         String resetLink = frontendUrl + "/reset-password?token=" + token;
 
+        // Compose email
         SimpleMailMessage message = new SimpleMailMessage();
         message.setTo(email);
         message.setSubject("Password Reset Request");
-        message.setText("Hi " + user.getName() + ",\n\nClick the link below to reset your password:\n" 
-                        + resetLink + "\n\nThis link will expire in 30 minutes.");
+        message.setText("Hi " + user.getName() + ",\n\n"
+            + "Click the link below to reset your password:\n"
+            + resetLink + "\n\n"
+            + "This link will expire in 30 minutes.\n\n"
+            + "If you didn’t request this, please ignore the email.");
 
         System.out.println("DEBUG: Attempting to send email to " + email);
 
@@ -77,9 +83,9 @@ public class UserService {
             System.out.println("DEBUG: Failed to send email!");
             e.printStackTrace();
         }
+
         System.out.println("reset method end called in service");
     }
-
 
 
 }
