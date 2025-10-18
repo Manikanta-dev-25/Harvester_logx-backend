@@ -30,7 +30,7 @@ import com.mani.respository.UserRepository;
 
 @RestController
 @RequestMapping("/api/auth")
-@CrossOrigin(origins = {"https://manikanta-dev-25.github.io/Harvester_logx-frontend"})
+//@CrossOrigin(origins = {"https://manikanta-dev-25.github.io/Harvester_logx-frontend"})
 public class AuthController {
 
     @Autowired
