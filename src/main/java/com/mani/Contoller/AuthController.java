@@ -193,4 +193,8 @@ public class AuthController {
         List<LogEntry> results = logService.filterLogs(name, village, hourlyWage);
         return ResponseEntity.ok(results);
     }
+    @GetMapping("/ping")
+public ResponseEntity<String> ping() {
+    return ResponseEntity.ok("Backend is alive ✅");
+}
 }
