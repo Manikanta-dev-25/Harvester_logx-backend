@@ -4,10 +4,11 @@ import java.time.LocalDateTime;
 import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import sibApi.TransactionalEmailsApi;
-import sibModel.*;
-import sibApi.Configuration;
-import sibApi.ApiClient;
+
+import org.springframework.mail.SimpleMailMessage;
+import org.springframework.mail.javamail.JavaMailSender;
+
+
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -48,7 +49,7 @@ public class UserService {
     }
 
     
-    public void sendResetLink(String email) {
+   public void sendResetLink(String email) {
     System.out.println("reset method called in service");
 
     Users user = ur.findByEmailIgnoreCase(email.trim());
@@ -63,27 +64,16 @@ public class UserService {
     user.setTokenExpiry(LocalDateTime.now().plusMinutes(30));
     ur.save(user);
 
-    // ✅ Use deployed frontend URL instead of localhost
+    // Use deployed frontend URL
     String frontendUrl = "https://manikanta-dev-25.github.io/Harvester_logx-frontend";
     String resetLink = frontendUrl + "/reset-password?token=" + token;
 
-    // ✅ Brevo API setup
-    ApiClient defaultClient = Configuration.getDefaultApiClient();
-    defaultClient.setApiKey("api-key", "bRTAMZI9Kfyp3FwV"); // Your Brevo API key
-
-    TransactionalEmailsApi apiInstance = new TransactionalEmailsApi(defaultClient);
-
-    SendSmtpEmailSender sender = new SendSmtpEmailSender();
-    sender.setEmail("kondapakamani75@gmail.com"); // Must match verified sender in Brevo
-
-    SendSmtpEmailTo to = new SendSmtpEmailTo();
-    to.setEmail(email);
-
-    SendSmtpEmail emailRequest = new SendSmtpEmail();
-    emailRequest.setSender(sender);
-    emailRequest.setTo(Collections.singletonList(to));
-    emailRequest.setSubject("Password Reset Request");
-    emailRequest.setTextContent("Hi " + user.getName() + ",\n\n"
+    // Compose email
+    SimpleMailMessage message = new SimpleMailMessage();
+    message.setTo(email);
+    message.setFrom("kondapakamani75@gmail.com"); // Must match verified sender in Brevo
+    message.setSubject("Password Reset Request");
+    message.setText("Hi " + user.getName() + ",\n\n"
         + "Click the link below to reset your password:\n"
         + resetLink + "\n\n"
         + "This link will expire in 30 minutes.\n\n"
@@ -92,8 +82,8 @@ public class UserService {
     System.out.println("DEBUG: Attempting to send email to " + email);
 
     try {
-        CreateSmtpEmail response = apiInstance.sendTransacEmail(emailRequest);
-        System.out.println("DEBUG: Email sent! Message ID: " + response.getMessageId());
+        mailSender.send(message);
+        System.out.println("DEBUG: Email sent successfully!");
     } catch (Exception e) {
         System.out.println("DEBUG: Failed to send email!");
         e.printStackTrace();
