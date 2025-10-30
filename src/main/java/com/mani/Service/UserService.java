@@ -82,10 +82,17 @@ public class UserService {
     System.out.println("DEBUG: Attempting to send email to " + email);
 
     // *** FIX APPLIED HERE: Removing try-catch to allow MailSendException to propagate ***
-    mailSender.send(message); 
+    // UserService.java
+// ...
+try {
+    mailSender.send(message);
     System.out.println("DEBUG: Email sent successfully!");
-
-    System.out.println("reset method end called in service");
+} catch (Exception e) {
+    System.out.println("DEBUG: Failed to send email!");
+    e.printStackTrace(); // <-- Prints the error, but the method completes normally
 }
+
+System.out.println("reset method end called in service");
+
 
 }
