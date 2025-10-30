@@ -49,7 +49,7 @@ public class UserService {
     }
 
     
-   public void sendResetLink(String email) {
+  public void sendResetLink(String email) {
     System.out.println("reset method called in service");
 
     Users user = ur.findByEmailIgnoreCase(email.trim());
@@ -62,7 +62,7 @@ public class UserService {
     String token = UUID.randomUUID().toString();
     user.setResetToken(token);
     user.setTokenExpiry(LocalDateTime.now().plusMinutes(30));
-    ur.save(user);
+    ur.save(user); // Database update is successful
 
     // Use deployed frontend URL
     String frontendUrl = "https://manikanta-dev-25.github.io/Harvester_logx-frontend";
@@ -81,17 +81,11 @@ public class UserService {
 
     System.out.println("DEBUG: Attempting to send email to " + email);
 
-    try {
-        mailSender.send(message);
-        System.out.println("DEBUG: Email sent successfully!");
-    } catch (Exception e) {
-        System.out.println("DEBUG: Failed to send email!");
-        e.printStackTrace();
-    }
+    // *** FIX APPLIED HERE: Removing try-catch to allow MailSendException to propagate ***
+    mailSender.send(message); 
+    System.out.println("DEBUG: Email sent successfully!");
 
     System.out.println("reset method end called in service");
 }
-
-
 
 }
