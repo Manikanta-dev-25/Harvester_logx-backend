@@ -1,6 +1,16 @@
 package com.mani.Entity;
 
-import jakarta.persistence.*;
+import java.time.LocalTime;
+
+import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonFormat;
+
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 
 @Entity
 public class TimeInterval {
@@ -9,23 +19,23 @@ public class TimeInterval {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    // Time fields received as "hh:mm AM/PM" strings from frontend
-    private String startTime;
-    private String stopTime;
+    @JsonFormat(pattern = "hh:mm a")
+    private LocalTime startTime;
 
-    // Duration in decimal hours, price as formatted string
+    @JsonFormat(pattern = "hh:mm a")
+    private LocalTime stopTime;
+
     private Double duration;
-    private String price;
 
-    // Many intervals belong to one log entry
     @ManyToOne
     @JoinColumn(name = "log_entry_id")
+    @JsonBackReference
     private LogEntry logEntry;
 
-    // Constructors
-    public TimeInterval() {}
+    public TimeInterval() {
+        super();
+    }
 
-    // Getters and Setters
     public Long getId() {
         return id;
     }
@@ -34,19 +44,19 @@ public class TimeInterval {
         this.id = id;
     }
 
-    public String getStartTime() {
+    public LocalTime getStartTime() {
         return startTime;
     }
 
-    public void setStartTime(String startTime) {
+    public void setStartTime(LocalTime startTime) {
         this.startTime = startTime;
     }
 
-    public String getStopTime() {
+    public LocalTime getStopTime() {
         return stopTime;
     }
 
-    public void setStopTime(String stopTime) {
+    public void setStopTime(LocalTime stopTime) {
         this.stopTime = stopTime;
     }
 
@@ -56,14 +66,6 @@ public class TimeInterval {
 
     public void setDuration(Double duration) {
         this.duration = duration;
-    }
-
-    public String getPrice() {
-        return price;
-    }
-
-    public void setPrice(String price) {
-        this.price = price;
     }
 
     public LogEntry getLogEntry() {
