@@ -1,16 +1,15 @@
 package com.mani.Service;
 
-import com.mani.Entity.LogEntry;
-import com.mani.Entity.TimeInterval;
-import com.mani.respository.LogRepository;
+import java.time.Duration;
+import java.time.LocalDate;
+import java.util.List;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.time.Duration;
-import java.time.LocalDate;
-import java.time.LocalTime;
-import java.time.format.DateTimeFormatter;
-import java.util.List;
+import com.mani.Entity.LogEntry;
+import com.mani.Entity.TimeInterval;
+import com.mani.respository.LogRepository;
 
 @Service
 public class LogService {
@@ -20,28 +19,22 @@ public class LogService {
 
     public LogEntry SaveEntries(LogEntry le) {
         double total = 0.0;
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("hh:mm a");
 
         for (TimeInterval t : le.getTimeIntervals()) {
-            t.setLogEntry(le); // always set parent reference
+            t.setLogEntry(le);
 
-            try {
-                LocalTime start = LocalTime.parse(t.getStartTime(), formatter);
-                LocalTime stop = LocalTime.parse(t.getStopTime(), formatter);
-
-                double hours = Duration.between(start, stop).toMinutes() / 60.0;
-                if (hours < 0) hours += 24.0;
-
-                t.setDuration(hours);
-
-                double rate = le.getHourlyWage() != null ? le.getHourlyWage() : 0.0;
-                t.setPrice(String.format("%.2f", hours * rate));
-
-                total += hours;
-            } catch (Exception e) {
+            if (t.getStartTime() == null || t.getStopTime() == null) {
                 t.setDuration(0.0);
-                t.setPrice("0.00");
+                continue;
             }
+
+            double hours = Duration.between(t.getStartTime(), t.getStopTime()).toMinutes() / 60.0;
+            if (hours < 0) {
+                hours += 24.0;
+            }
+
+            t.setDuration(hours);
+            total += hours;
         }
 
         le.setTotalHours(total);
@@ -54,7 +47,7 @@ public class LogService {
 
     public List<LogEntry> getLogsByUser(String name) {
         System.out.println("view log method=====");
-        return lr.findByCreatedByIgnoreCase(name.trim());
+        return lr.findByNameContainingIgnoreCase(name.trim());
     }
 
     public List<LogEntry> filterLogs(String query, String village, Double hourlyWage) {
