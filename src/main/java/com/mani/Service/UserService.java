@@ -58,20 +58,20 @@ public class UserService {
         return;
     }
 
-    // Generate reset token and expiry
+   
     String token = UUID.randomUUID().toString();
     user.setResetToken(token);
     user.setTokenExpiry(LocalDateTime.now().plusMinutes(30));
-    ur.save(user); // Database update is successful
+    ur.save(user); 
 
-    // Use deployed frontend URL
+   
     String frontendUrl = "https://manikanta-dev-25.github.io/Harvester_logx-frontend";
     String resetLink = frontendUrl + "/reset.html?token=" + token;
 
     // Compose email
     SimpleMailMessage message = new SimpleMailMessage();
     message.setTo(email);
-    message.setFrom("kondapakamani75@gmail.com"); // Must match verified sender in Brevo
+    message.setFrom("kondapakamani75@gmail.com"); 
     message.setSubject("Password Reset Request");
     message.setText("Hi " + user.getName() + ",\n\n"
         + "Click the link below to reset your password:\n"
@@ -81,15 +81,13 @@ public class UserService {
 
     System.out.println("DEBUG: Attempting to send email to " + email);
 
-    // *** FIX APPLIED HERE: Removing try-catch to allow MailSendException to propagate ***
-    // UserService.java
-// ...
+
 try {
     mailSender.send(message);
     System.out.println("DEBUG: Email sent successfully!");
 } catch (Exception e) {
     System.out.println("DEBUG: Failed to send email!");
-    e.printStackTrace(); // <-- Prints the error, but the method completes normally
+    e.printStackTrace(); 
 }
 
 System.out.println("reset method end called in service");
