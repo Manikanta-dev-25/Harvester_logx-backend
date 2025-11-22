@@ -23,10 +23,10 @@ public class LogEntry {
     private Long id;
 
     @Column(nullable = false)
-    private String createdBy; // app user who created the log
+    private String createdBy; 
 
     @Column(nullable = false)
-    private String name;      // farmer name
+    private String name;    
 
     @Column(nullable = false)
     private String phno;
@@ -47,7 +47,7 @@ public class LogEntry {
 
     public LogEntry() {}
 
-    // Getters and Setters
+ 
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
 
