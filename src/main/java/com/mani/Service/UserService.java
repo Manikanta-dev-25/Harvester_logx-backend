@@ -66,7 +66,7 @@ public class UserService {
 
    
     String frontendUrl = "https://manikanta-dev-25.github.io/Harvester_logx-frontend";
-    String resetLink = frontendUrl + "/reset.html?token=" + token;
+    String resetLink = frontendUrl + "/reset-password?token=" + token;
 
     // Compose email
     SimpleMailMessage message = new SimpleMailMessage();
