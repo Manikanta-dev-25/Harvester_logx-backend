@@ -22,7 +22,7 @@ public class SecurityConfig {
             .authorizeHttpRequests(auth -> auth
                 .anyRequest().permitAll()
             )
-            .headers(headers -> headers.frameOptions(frame -> frame.disable())); // for H2 console
+            .headers(headers -> headers.frameOptions(frame -> frame.disable())); 
 
         return http.build();
     }
