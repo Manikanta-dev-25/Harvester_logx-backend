@@ -1,4 +1,4 @@
-package com.mani.Contoller; // Keep folder name consistent; fix typo if desired to "Controller"
+package com.mani.Contoller; 
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -48,7 +48,7 @@ public class AuthController {
     @Autowired
     private BCryptPasswordEncoder passwordEncoder;
 
-    // ------------------ AUTH ------------------
+
 
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody Users user) {
@@ -79,7 +79,7 @@ public class AuthController {
         return ResponseEntity.ok(response);
     }
 
-    // ------------------ PASSWORD RESET ------------------
+  
 
     @PostMapping("/forgot-password")
     public ResponseEntity<String> forgotPassword(@RequestBody Users user) {
@@ -114,7 +114,6 @@ public class AuthController {
         return ResponseEntity.ok("Password has been reset successfully ✅");
     }
 
-    // ------------------ LOGS ------------------
 
     @PostMapping("/logs/save")
     public ResponseEntity<LogEntry> saveLog(@RequestBody LogEntry log) {
